@@ -7,7 +7,7 @@ Thank you very much for this opportunity to demonstrate my front-end development
 
 This project is a **complete redesign** of the "Choose Your Skip Size" page from [wewantwaste.co.uk](https://wewantwaste.co.uk), rebuilt with a focus on clean, maintainable React code, responsive design, and improved UI/UX — while preserving the original functionality.
 
-> 🔗 [Live Demo (CodeSandbox)](https://your-sandbox-link)
+> 🔗 [Live Demo (CodeSandbox)](https://codesandbox.io/p/github/abressiddique/WasteUiusingReact)
 
 > 🔗 [GitHub Repository](https://github.com/abressiddique/WasteUiusingReact)
 
@@ -103,7 +103,4 @@ Abres Siddique
 
 ```
 
----
 
-Just replace `https://your-sandbox-link` with your actual sandbox URL and you’re ready to go!
-```

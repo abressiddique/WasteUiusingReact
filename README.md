@@ -1,4 +1,86 @@
 
+# Install dependencies first (only needed on Colab/Notebook)
+# !pip install langchain openai faiss-cpu langchain-community langchain-huggingface
+
+from langchain_openai import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain.chains import LLMChain, SequentialChain
+from langchain.memory import ConversationBufferMemory
+from langchain.agents import initialize_agent, Tool
+from langchain_community.utilities import WikipediaAPIWrapper
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
+import os
+
+# ========== 1. LLM ==========
+llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+
+# ========== 2. Prompt Templates ==========
+research_prompt = ChatPromptTemplate.from_template(
+    "Find the latest information about {topic} from Wikipedia and summarize it in 5 bullet points."
+)
+
+email_prompt = ChatPromptTemplate.from_template(
+    "Write a professional email to {recipient} summarizing the following research:\n{research_summary}"
+)
+
+# ========== 3. Chains ==========
+research_chain = LLMChain(llm=llm, prompt=research_prompt, output_key="research_summary")
+email_chain = LLMChain(llm=llm, prompt=email_prompt, output_key="email")
+
+# SequentialChain links them: research -> email
+pipeline = SequentialChain(
+    chains=[research_chain, email_chain],
+    input_variables=["topic", "recipient"],
+    output_variables=["research_summary", "email"]
+)
+
+# ========== 4. Memory ==========
+memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+
+# ========== 5. Tools for Agents ==========
+wiki = WikipediaAPIWrapper()
+search_tool = Tool(
+    name="Wikipedia Search",
+    func=wiki.run,
+    description="Useful for getting info about a topic from Wikipedia"
+)
+
+# ========== 6. Agent ==========
+agent = initialize_agent(
+    tools=[search_tool],
+    llm=llm,
+    agent="chat-conversational-react-description",
+    memory=memory,
+    verbose=True
+)
+
+# ========== 7. Vector Store (Knowledge Base) ==========
+embeddings = HuggingFaceEmbeddings()
+docs = ["LangChain is a framework for building LLM-powered apps.",
+        "LangGraph extends LangChain for stateful multi-agent workflows.",
+        "Vector databases help with semantic search and RAG."]
+
+vectorstore = FAISS.from_texts(docs, embeddings)
+
+# ========== 8. Using Everything Together ==========
+print("----- Step 1: Sequential Chain (Research + Email) -----")
+output = pipeline.run({"topic": "LangChain", "recipient": "CTO of Manal"})
+print(output)
+
+print("\n----- Step 2: Agent Calling Wikipedia Tool -----")
+response = agent.run("Tell me something about LangGraph")
+print(response)
+
+print("\n----- Step 3: Vectorstore Semantic Search -----")
+query = "What is LangGraph?"
+docs = vectorstore.similarity_search(query, k=2)
+for d in docs:
+    print(d.page_content)
+
+print("\n----- Step 4: Memory in Action -----")
+agent.run("Who did I just ask about?")
+
 # ♻️ Wewantwaste Skip Selector Redesign (Frontend React Challenge)
 
 Dear REMWaste HR and Resh C.,
